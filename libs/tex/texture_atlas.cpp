@@ -20,8 +20,8 @@ TextureAtlas::TextureAtlas(unsigned int size) :
     size(size), padding(size >> 7), finalized(false) {
 
     bin = RectangularBin::create(size, size);
-    image = mve::ByteImage::create(size, size, 3);
-    validity_mask = mve::ByteImage::create(size, size, 1);
+    image = mve::RawImage::create(size, size, 3);
+    validity_mask = mve::RawImage::create(size, size, 1);
 }
 
 /**
@@ -29,8 +29,8 @@ TextureAtlas::TextureAtlas(unsigned int size) :
   * optionally adding a border.
   * @warning asserts that the given src image fits into the given dest image.
   */
-void copy_into(mve::ByteImage::ConstPtr src, int x, int y,
-    mve::ByteImage::Ptr dest, int border = 0) {
+void copy_into(mve::RawImage::ConstPtr src, int x, int y,
+    mve::RawImage::Ptr dest, int border = 0) {
 
     assert(x >= 0 && x + src->width() + 2 * border <= dest->width());
     assert(y >= 0 && y + src->height() + 2 * border <= dest->height());
@@ -68,11 +68,11 @@ TextureAtlas::insert(TexturePatch::ConstPtr texture_patch) {
     if (!bin->insert(&rect)) return false;
 
     /* Update texture atlas and its validity mask. */
-    mve::ByteImage::Ptr patch_image = mve::image::float_to_byte_image(
+    mve::RawImage::Ptr patch_image = mve::image::float_to_raw_image(
         texture_patch->get_image(), 0.0f, 1.0f);
 
     copy_into(patch_image, rect.min_x, rect.min_y, image, padding);
-    mve::ByteImage::ConstPtr patch_validity_mask = texture_patch->get_validity_mask();
+    mve::RawImage::ConstPtr patch_validity_mask = texture_patch->get_validity_mask();
     copy_into(patch_validity_mask, rect.min_x, rect.min_y, validity_mask, padding);
 
     TexturePatch::Faces const & patch_faces = texture_patch->get_faces();
@@ -137,7 +137,7 @@ TextureAtlas::apply_edge_padding(void) {
         }
     }
 
-    mve::ByteImage::Ptr new_validity_mask = validity_mask->duplicate();
+    mve::RawImage::Ptr new_validity_mask = validity_mask->duplicate();
 
     /* Iteratively dilate border pixels until padding constants are reached. */
     for (unsigned int n = 0; n <= padding; ++n) {

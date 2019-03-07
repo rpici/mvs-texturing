@@ -13,7 +13,7 @@
 #include "mve/image.h"
 
 void
-poisson_blend(mve::FloatImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
+poisson_blend(mve::FloatImage::ConstPtr src, mve::RawImage::ConstPtr mask,
     mve::FloatImage::Ptr dest, float alpha);
 
 

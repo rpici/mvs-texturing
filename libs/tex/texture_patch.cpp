@@ -20,9 +20,9 @@ TexturePatch::TexturePatch(int label, std::vector<std::size_t> const & faces,
     std::vector<math::Vec2f>  const & texcoords, mve::FloatImage::Ptr image)
     : label(label), faces(faces), texcoords(texcoords), image(image) {
 
-    validity_mask = mve::ByteImage::create(get_width(), get_height(), 1);
-    validity_mask->fill(255);
-    blending_mask = mve::ByteImage::create(get_width(), get_height(), 1);
+    validity_mask = mve::RawImage::create(get_width(), get_height(), 1);
+    validity_mask->fill(65535);
+    blending_mask = mve::RawImage::create(get_width(), get_height(), 1);
 }
 
 TexturePatch::TexturePatch(TexturePatch const & texture_patch) {
@@ -226,7 +226,7 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
         }
     }
 
-    mve::ByteImage::Ptr inner_pixel = validity_mask->duplicate();
+    mve::RawImage::Ptr inner_pixel = validity_mask->duplicate();
 
     /* Iteratively erode all border pixels. */
     for (std::size_t i = 0; i < strip_width; ++i) {
@@ -265,25 +265,25 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
     /* Sanitize blending mask. */
     for (int y = 1; y < height - 1; ++y) {
         for (int x = 1; x < width - 1; ++x) {
-            if (blending_mask->at(x, y, 0) == 128)  {
-                uint8_t n[] = {blending_mask->at(x - 1, y, 0),
+            if (blending_mask->at(x, y, 0) == 32768)  {
+                uint16_t n[] = {blending_mask->at(x - 1, y, 0),
                     blending_mask->at(x + 1, y, 0),
                     blending_mask->at(x, y - 1, 0),
                     blending_mask->at(x, y + 1, 0)
                 };
                 bool valid = true;
-                for (uint8_t v : n) {
-                    if (v == 255) continue;
+                for (auto v : n) {
+                    if (v == 65535) continue;
                     valid = false;
                 }
-                if (valid) blending_mask->at(x, y, 0) = 255;
+                if (valid) blending_mask->at(x, y, 0) = 65535;
             }
         }
     }
 
     /* Mark all remaining pixels invalid in the blending_mask. */
     for (int i = 0; i < inner_pixel->get_pixel_amount(); ++i) {
-        if (inner_pixel->at(i) == 255) blending_mask->at(i) = 0;
+        if (inner_pixel->at(i) == 65535) blending_mask->at(i) = 0;
     }
 
     /* Mark all border pixels. */
@@ -292,6 +292,6 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
          int x = it->first;
          int y = it->second;
 
-         blending_mask->at(x, y, 0) = 128;
+         blending_mask->at(x, y, 0) = 32768;
     }
 }

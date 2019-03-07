@@ -96,14 +96,14 @@ TextureView::generate_validity_mask(void) {
 void
 TextureView::load_image(void) {
     if(image != NULL) return;
-    image = mve::image::load_file(image_file);
+    image = mve::image::load_png_16_file(image_file);
 }
 
 void
 TextureView::generate_gradient_magnitude(void) {
     assert(image != NULL);
-    mve::ByteImage::Ptr bw = mve::image::desaturate<std::uint8_t>(image, mve::image::DESATURATE_LUMINANCE);
-    gradient_magnitude = mve::image::sobel_edge<std::uint8_t>(bw);
+    mve::RawImage::Ptr bw = mve::image::desaturate<std::uint16_t>(image, mve::image::DESATURATE_LUMINANCE);
+    gradient_magnitude = mve::image::sobel_edge<std::uint16_t>(bw);
 }
 
 void
@@ -299,8 +299,8 @@ TextureView::export_triangle(math::Vec3f v1, math::Vec3f v2, math::Vec3f v3,
     const int top = floor(aabb.max_y);
 
     assert(width > 0 && height > 0);
-    mve::image::save_png_file(mve::image::crop(image, width, height, left, top,
-        *math::Vec3uc(255, 0, 255)), filename);
+    mve::image::save_png_16_file(mve::image::crop(image, width, height, left, top,
+        *math::Vector<uint16_t, 3>(16383, 0, 16383)), filename);
 }
 
 void

@@ -47,8 +47,8 @@ class TextureView {
         int width;
         int height;
         std::string image_file;
-        mve::ByteImage::Ptr image;
-        mve::ByteImage::Ptr gradient_magnitude;
+        mve::RawImage::Ptr image;
+        mve::RawImage::Ptr gradient_magnitude;
         std::vector<bool> validity_mask;
 
 
@@ -85,10 +85,10 @@ class TextureView {
         /** Returns the height of the corresponding image. */
         int get_height(void) const;
         /** Returns a reference pointer to the corresponding image. */
-        mve::ByteImage::Ptr get_image(void) const;
+        mve::RawImage::Ptr get_image(void) const;
 
         /** Exchange encapsulated image. */
-        void bind_image(mve::ByteImage::Ptr new_image);
+        void bind_image(mve::RawImage::Ptr new_image);
 
         /** Loads the corresponding image. */
         void load_image(void);
@@ -144,7 +144,7 @@ TextureView::get_height(void) const {
     return height;
 }
 
-inline mve::ByteImage::Ptr
+inline mve::RawImage::Ptr
 TextureView::get_image(void) const {
     assert(image != NULL);
     return image;
@@ -174,13 +174,13 @@ TextureView::get_pixel_values(math::Vec3f const & vertex) const {
 inline math::Vec3f
 TextureView::get_pixel_values(math::Vec2f const & pixel) const {
     assert(image != NULL);
-    math::Vec3uc values;
+    math::Vector<uint16_t,3> values;
     image->linear_at(pixel[0], pixel[1], *values);
     return math::Vec3f(values) / 255.0f;
 }
 
 inline void
-TextureView::bind_image(mve::ByteImage::Ptr new_image) {
+TextureView::bind_image(mve::RawImage::Ptr new_image) {
     image = new_image;
 }
 
