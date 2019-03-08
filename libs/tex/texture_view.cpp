@@ -43,19 +43,19 @@ void
 TextureView::generate_validity_mask(void) {
     assert(image != NULL);
     validity_mask.resize(width * height, true);
-    mve::ByteImage::Ptr checked = mve::ByteImage::create(width, height, 1);
+    mve::RawImage::Ptr checked = mve::RawImage::create(width, height, 1);
 
     std::list<math::Vec2i> queue;
 
     /* Start from the corners. */
     queue.push_back(math::Vec2i(0,0));
-    checked->at(0, 0, 0) = 255;
+    checked->at(0, 0, 0) = 65535;
     queue.push_back(math::Vec2i(0, height - 1));
-    checked->at(0, height - 1, 0) = 255;
+    checked->at(0, height - 1, 0) = 65535;
     queue.push_back(math::Vec2i(width - 1, 0));
-    checked->at(width - 1, 0, 0) = 255;
+    checked->at(width - 1, 0, 0) = 65535;
     queue.push_back(math::Vec2i(width - 1, height - 1));
-    checked->at(width - 1, height - 1, 0) = 255;
+    checked->at(width - 1, height - 1, 0) = 65535;
 
     while (!queue.empty()) {
         math::Vec2i pixel = queue.front();
@@ -85,7 +85,7 @@ TextureView::generate_validity_mask(void) {
                 if (0 <= nx && nx < width && 0 <= ny && ny < height) {
                     if (checked->at(nx, ny, 0) == 0) {
                         queue.push_front(npixel);
-                        checked->at(nx, ny, 0) = 255;
+                        checked->at(nx, ny, 0) = 65535;
                     }
                 }
             }
@@ -206,13 +206,13 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
 
                 if (settings.outlier_removal != OUTLIER_REMOVAL_NONE) {
                     for (std::size_t i = 0; i < 3; i++){
-                         color[i] = static_cast<double>(image->at(x, y, i)) / 255.0;
+                         color[i] = static_cast<double>(image->at(x, y, i)) / 65535.0;
                     }
                     colors += color;
                 }
 
                 if (settings.data_term == DATA_TERM_GMI) {
-                    gmi += static_cast<double>(gradient_magnitude->at(x, y, 0)) / 255.0;
+                    gmi += static_cast<double>(gradient_magnitude->at(x, y, 0)) / 65535.0;
                 }
                 ++num_samples;
             }
@@ -223,9 +223,9 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
         if (num_samples > 0) {
             gmi = (gmi / num_samples) * area;
         } else {
-            double gmv1 = static_cast<double>(gradient_magnitude->linear_at(p1[0], p1[1], 0)) / 255.0;
-            double gmv2 = static_cast<double>(gradient_magnitude->linear_at(p2[0], p2[1], 0)) / 255.0;
-            double gmv3 = static_cast<double>(gradient_magnitude->linear_at(p3[0], p3[1], 0)) / 255.0;
+            double gmv1 = static_cast<double>(gradient_magnitude->linear_at(p1[0], p1[1], 0)) / 65535.0;
+            double gmv2 = static_cast<double>(gradient_magnitude->linear_at(p2[0], p2[1], 0)) / 65535.0;
+            double gmv3 = static_cast<double>(gradient_magnitude->linear_at(p3[0], p3[1], 0)) / 65535.0;
             gmi = ((gmv1 + gmv2 + gmv3) / 3.0) * area;
         }
     }
@@ -236,9 +236,9 @@ TextureView::get_face_info(math::Vec3f const & v1, math::Vec3f const & v2,
         } else {
             math::Vec3d c1, c2, c3;
             for (std::size_t i = 0; i < 3; ++i) {
-                 c1[i] = static_cast<double>(image->linear_at(p1[0], p1[1], i)) / 255.0;
-                 c2[i] = static_cast<double>(image->linear_at(p2[0], p2[1], i)) / 255.0;
-                 c3[i] = static_cast<double>(image->linear_at(p3[0], p3[1], i)) / 255.0;
+                 c1[i] = static_cast<double>(image->linear_at(p1[0], p1[1], i)) / 65535.0;
+                 c2[i] = static_cast<double>(image->linear_at(p2[0], p2[1], i)) / 65535.0;
+                 c3[i] = static_cast<double>(image->linear_at(p3[0], p3[1], i)) / 65535.0;
             }
             face_info->mean_color = ((c1 + c2 + c3) / 3.0);
         }
@@ -308,7 +308,7 @@ TextureView::export_validity_mask(std::string const & filename) const {
     assert(validity_mask.size() == static_cast<std::size_t>(width * height));
     mve::ByteImage::Ptr img = mve::ByteImage::create(width, height, 1);
     for (std::size_t i = 0; i < validity_mask.size(); ++i) {
-        img->at(static_cast<int>(i), 0) = validity_mask[i] ? 255 : 0;
+        img->at(static_cast<int>(i), 0) = validity_mask[i] ? 65535 : 0;
     }
     mve::image::save_png_file(img, filename);
 }

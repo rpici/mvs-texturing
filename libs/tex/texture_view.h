@@ -176,7 +176,7 @@ TextureView::get_pixel_values(math::Vec2f const & pixel) const {
     assert(image != NULL);
     math::Vector<uint16_t,3> values;
     image->linear_at(pixel[0], pixel[1], *values);
-    return math::Vec3f(values) / 255.0f;
+    return math::Vec3f(values) / 65535.0f;
 }
 
 inline void

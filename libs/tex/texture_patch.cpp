@@ -75,11 +75,11 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
                             adjust_values[i][c], adjust_values[i + 1][c], adjust_values[i + 2][c],
                             bcoords[0], bcoords[1], bcoords[2]);
                     }
-                    validity_mask->at(x, y, 0) = 255;
-                    blending_mask->at(x, y, 0) = 255;
+                    validity_mask->at(x, y, 0) = 65535;
+                    blending_mask->at(x, y, 0) = 65535;
                 } else {
 
-                    if (validity_mask->at(x, y, 0) == 255)
+                    if (validity_mask->at(x, y, 0) == 65535)
                         continue;
 
                     /* Check whether the pixels distance from the triangle is more than one pixel. */
@@ -95,8 +95,9 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
                             adjust_values[i][c], adjust_values[i + 1][c], adjust_values[i + 2][c],
                             bcoords[0], bcoords[1], bcoords[2]);
                     }
-                    validity_mask->at(x, y, 0) = 255;
-                    blending_mask->at(x, y, 0) = 64;
+                    validity_mask->at(x, y, 0) = 65535;
+                    //blending_mask->at(x, y, 0) = 64;
+                    blending_mask->at(x, y, 0) = ceil( 65535 / 4 );
                 }
             }
         }
@@ -137,10 +138,10 @@ bool TexturePatch::valid_pixel(math::Vec2f pixel) const {
         float const w3 = cy - static_cast<float>(floor_y);
         float const w2 = 1.0f - w3;
 
-        valid = (w0 * w2 == 0.0f || validity_mask->at(floor_x, floor_y, 0) == 255) &&
-                (w1 * w2 == 0.0f || validity_mask->at(floor_xp1, floor_y, 0) == 255) &&
-                (w0 * w3 == 0.0f || validity_mask->at(floor_x, floor_yp1, 0) == 255) &&
-                (w1 * w3 == 0.0f || validity_mask->at(floor_xp1, floor_yp1, 0) == 255);
+        valid = (w0 * w2 == 0.0f || validity_mask->at(floor_x, floor_y, 0) == 65535) &&
+                (w1 * w2 == 0.0f || validity_mask->at(floor_xp1, floor_y, 0) == 65535) &&
+                (w0 * w3 == 0.0f || validity_mask->at(floor_x, floor_yp1, 0) == 65535) &&
+                (w1 * w3 == 0.0f || validity_mask->at(floor_xp1, floor_yp1, 0) == 65535);
     }
 
     return valid;
@@ -153,7 +154,7 @@ TexturePatch::valid_pixel(math::Vec2i pixel) const {
 
     bool valid = (0 <= x && x < get_width() && 0 <= y && y < get_height());
     if (valid && validity_mask != NULL) {
-        valid = validity_mask->at(x, y, 0) == 255;
+        valid = validity_mask->at(x, y, 0) == 65535;
     }
 
     return valid;
@@ -253,7 +254,7 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
                      int ny = y + j;
                      if (0 <= nx && nx < width &&
                          0 <= ny && ny < height &&
-                         inner_pixel->at(nx, ny, 0) == 255) {
+                         inner_pixel->at(nx, ny, 0) == 65535) {
 
                          valid_border_pixels.insert(std::pair<int, int>(nx, ny));
                      }

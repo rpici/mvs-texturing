@@ -87,7 +87,7 @@ poisson_blend(mve::FloatImage::ConstPtr src, mve::RawImage::ConstPtr mask,
             coefficients_b[row] = math::Vec3f(&dest->at(i, 0));
         }
 
-        if (mask->at(i) == 255) {
+        if (mask->at(i) == 65535) {
             const int i01 = indices->at(i - width);
             const int i10 = indices->at(i - 1);
             const int i11 = indices->at(i);
