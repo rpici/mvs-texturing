@@ -299,8 +299,9 @@ TextureView::export_triangle(math::Vec3f v1, math::Vec3f v2, math::Vec3f v3,
     const int top = floor(aabb.max_y);
 
     assert(width > 0 && height > 0);
+    constexpr auto max_16_bit_value = 65535;
     mve::image::save_png_16_file(mve::image::crop(image, width, height, left, top,
-        *math::Vector<uint16_t, 3>(16383, 0, 16383)), filename);
+        *math::Vector<uint16_t, 3>(max_16_bit_value, 0, max_16_bit_value)), filename);
 }
 
 void

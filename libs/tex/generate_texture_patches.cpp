@@ -124,7 +124,8 @@ generate_candidate(int label, TextureView const & texture_view,
     }
 
     mve::RawImage::Ptr byte_image;
-    byte_image = mve::image::crop(view_image, width, height, min_x, min_y, *math::Vector<uint16_t, 3>(16383, 0, 16383));
+    constexpr auto max_16_bit_value = 65535;
+    byte_image = mve::image::crop(view_image, width, height, min_x, min_y, *math::Vector<uint16_t, 3>(max_16_bit_value, 0, max_16_bit_value));
     mve::FloatImage::Ptr image = mve::image::raw_to_float_image(byte_image);
 
     if (!settings.tone_mapping == TONE_MAPPING_NONE) {

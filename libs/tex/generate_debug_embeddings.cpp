@@ -83,12 +83,14 @@ generate_debug_embeddings(std::vector<TextureView> * texture_views) {
         /* Determine font color depending on luminance of background. */
         float luminance = math::interpolate(float_color[0], float_color[1], float_color[2], 0.30f, 0.59f, 0.11f);
 
-        Vec3_uint16_t font_color = luminance > 0.5f ? Vec3_uint16_t(0,0,0) : Vec3_uint16_t(16383,16383,16383);
+        constexpr auto max_16_bit_value = 65535;
+        constexpr auto max_pixel_value = max_16_bit_value;
+        Vec3_uint16_t font_color = luminance > 0.5f ? Vec3_uint16_t(0,0,0) : Vec3_uint16_t(max_pixel_value, max_pixel_value, max_pixel_value);
 
         Vec3_uint16_t color;
-        color[0] = float_color[0] * 16383.0f;
-        color[1] = float_color[1] * 16383.0f;
-        color[2] = float_color[2] * 16383.0f;
+        color[0] = float_color[0] * max_pixel_value;
+        color[1] = float_color[1] * max_pixel_value;
+        color[2] = float_color[2] * max_pixel_value;
 
         mve::RawImage::Ptr image = mve::RawImage::create(texture_view->get_width(), texture_view->get_height(), 3);
         image->fill_color(*color);
