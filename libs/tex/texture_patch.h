@@ -37,8 +37,8 @@ class TexturePatch {
         Faces faces;
         Texcoords texcoords;
         mve::FloatImage::Ptr image;
-        mve::ByteImage::Ptr validity_mask;
-        mve::ByteImage::Ptr blending_mask;
+        mve::RawImage::Ptr validity_mask;
+        mve::RawImage::Ptr blending_mask;
 
     public:
         /** Constructs a texture patch. */
@@ -70,8 +70,8 @@ class TexturePatch {
         mve::FloatImage::Ptr get_image(void);
 
         mve::FloatImage::ConstPtr get_image(void) const;
-        mve::ByteImage::ConstPtr get_validity_mask(void) const;
-        mve::ByteImage::ConstPtr get_blending_mask(void) const;
+        mve::RawImage::ConstPtr get_validity_mask(void) const;
+        mve::RawImage::ConstPtr get_blending_mask(void) const;
 
         std::pair<float, float> get_min_max(void) const;
 
@@ -129,12 +129,12 @@ TexturePatch::get_image(void) const {
     return image;
 }
 
-inline mve::ByteImage::ConstPtr
+inline mve::RawImage::ConstPtr
 TexturePatch::get_validity_mask(void) const {
     return validity_mask;
 }
 
-inline mve::ByteImage::ConstPtr
+inline mve::RawImage::ConstPtr
 TexturePatch::get_blending_mask(void) const {
     assert(blending_mask != NULL);
     return blending_mask;

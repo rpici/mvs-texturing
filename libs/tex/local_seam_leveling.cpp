@@ -12,6 +12,7 @@
 #include "progress_counter.h"
 #include "texturing.h"
 #include "seam_leveling.h"
+#include <iostream>
 
 TEX_NAMESPACE_BEGIN
 
@@ -107,6 +108,48 @@ struct Line {
     std::vector<math::Vec3f> const * color;
 };
 
+namespace
+{
+    using std::cerr;
+    template <typename T>
+    void printTexturePatchCharacteristicsAndSomePixelValues(
+        const mve::Image<T>& image,
+        const int texturePatchIndex
+    )
+    {
+        const auto width  = image.width();
+        const auto height = image.height();
+        const auto x_NW   = 0;
+        const auto y_NW   = 0;
+        const auto x_MID  = width  / 2;
+        const auto y_MID  = height / 2;
+        const auto x_SE   = width  - 1;
+        const auto y_SE   = height - 1;
+        
+        cerr    << "patch " << texturePatchIndex << ", image type: " << image.get_type_string() << ", "
+                << "[ width, height, channels ] = [ "
+                << width << ", "
+                << height << ", "
+                << image.channels() << " ], "
+                << "values[ NW, MID, SE ] = [ "
+                << image.at( x_NW , y_NW ) << ", "
+                << image.at( x_MID, y_MID ) << ", "
+                << image.at( x_SE , y_SE ) << " ]"
+                << "\n";
+    }
+
+    void printTexturePatchesInfo( const std::vector<TexturePatch::Ptr> * texture_patches )
+    {
+        cerr << __FILE__ << ": total # texture patches = " << texture_patches->size() << "\n";
+
+        for (std::size_t i = 0; i < texture_patches->size(); ++i) {
+            TexturePatch::Ptr texture_patch = texture_patches->at(i);
+            mve::FloatImage::Ptr image = texture_patch->get_image()->duplicate();
+            printTexturePatchCharacteristicsAndSomePixelValues( *image, i );
+        }
+    }
+} //namespace
+
 void
 local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
     VertexProjectionInfos const & vertex_projection_infos,
@@ -179,6 +222,8 @@ local_seam_leveling(UniGraph const & graph, mve::TriangleMesh::ConstPtr mesh,
             pixels[projection_info.texture_patch_id].push_back(pixel);
         }
     }
+
+    printTexturePatchesInfo( texture_patches );
 
     ProgressCounter texture_patch_counter("\tBlending texture patches", texture_patches->size());
     #pragma omp parallel for schedule(dynamic)

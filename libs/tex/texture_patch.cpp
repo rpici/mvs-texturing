@@ -20,9 +20,9 @@ TexturePatch::TexturePatch(int label, std::vector<std::size_t> const & faces,
     std::vector<math::Vec2f>  const & texcoords, mve::FloatImage::Ptr image)
     : label(label), faces(faces), texcoords(texcoords), image(image) {
 
-    validity_mask = mve::ByteImage::create(get_width(), get_height(), 1);
-    validity_mask->fill(255);
-    blending_mask = mve::ByteImage::create(get_width(), get_height(), 1);
+    validity_mask = mve::RawImage::create(get_width(), get_height(), 1);
+    validity_mask->fill(65535);
+    blending_mask = mve::RawImage::create(get_width(), get_height(), 1);
 }
 
 TexturePatch::TexturePatch(TexturePatch const & texture_patch) {
@@ -75,11 +75,11 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
                             adjust_values[i][c], adjust_values[i + 1][c], adjust_values[i + 2][c],
                             bcoords[0], bcoords[1], bcoords[2]);
                     }
-                    validity_mask->at(x, y, 0) = 255;
-                    blending_mask->at(x, y, 0) = 255;
+                    validity_mask->at(x, y, 0) = 65535;
+                    blending_mask->at(x, y, 0) = 65535;
                 } else {
 
-                    if (validity_mask->at(x, y, 0) == 255)
+                    if (validity_mask->at(x, y, 0) == 65535)
                         continue;
 
                     /* Check whether the pixels distance from the triangle is more than one pixel. */
@@ -95,8 +95,9 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
                             adjust_values[i][c], adjust_values[i + 1][c], adjust_values[i + 2][c],
                             bcoords[0], bcoords[1], bcoords[2]);
                     }
-                    validity_mask->at(x, y, 0) = 255;
-                    blending_mask->at(x, y, 0) = 64;
+                    validity_mask->at(x, y, 0) = 65535;
+                    //blending_mask->at(x, y, 0) = 64;
+                    blending_mask->at(x, y, 0) = ceil( 65535 / 4 );
                 }
             }
         }
@@ -137,10 +138,10 @@ bool TexturePatch::valid_pixel(math::Vec2f pixel) const {
         float const w3 = cy - static_cast<float>(floor_y);
         float const w2 = 1.0f - w3;
 
-        valid = (w0 * w2 == 0.0f || validity_mask->at(floor_x, floor_y, 0) == 255) &&
-                (w1 * w2 == 0.0f || validity_mask->at(floor_xp1, floor_y, 0) == 255) &&
-                (w0 * w3 == 0.0f || validity_mask->at(floor_x, floor_yp1, 0) == 255) &&
-                (w1 * w3 == 0.0f || validity_mask->at(floor_xp1, floor_yp1, 0) == 255);
+        valid = (w0 * w2 == 0.0f || validity_mask->at(floor_x, floor_y, 0) == 65535) &&
+                (w1 * w2 == 0.0f || validity_mask->at(floor_xp1, floor_y, 0) == 65535) &&
+                (w0 * w3 == 0.0f || validity_mask->at(floor_x, floor_yp1, 0) == 65535) &&
+                (w1 * w3 == 0.0f || validity_mask->at(floor_xp1, floor_yp1, 0) == 65535);
     }
 
     return valid;
@@ -153,7 +154,7 @@ TexturePatch::valid_pixel(math::Vec2i pixel) const {
 
     bool valid = (0 <= x && x < get_width() && 0 <= y && y < get_height());
     if (valid && validity_mask != NULL) {
-        valid = validity_mask->at(x, y, 0) == 255;
+        valid = validity_mask->at(x, y, 0) == 65535;
     }
 
     return valid;
@@ -174,7 +175,11 @@ TexturePatch::set_pixel_value(math::Vec2i pixel, math::Vec3f color) {
     assert(valid_pixel(pixel));
 
     std::copy(color.begin(), color.end(), &image->at(pixel[0], pixel[1], 0));
+#ifdef ORIGINAL_8UC3_PIPELINE
     blending_mask->at(pixel[0], pixel[1], 0) = 128;
+#else
+    blending_mask->at(pixel[0], pixel[1], 0) = 32768;
+#endif
 }
 
 void
@@ -184,7 +189,11 @@ TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
     /* Invalidate all pixels outside the boundary. */
     for (int y = 0; y < blending_mask->height(); ++y) {
         for (int x = 0; x < blending_mask->width(); ++x) {
+#ifdef ORIGINAL_8UC3_PIPELINE
             if (blending_mask->at(x, y, 0) == 64) {
+#else
+            if (blending_mask->at(x, y, 0) == 16384) {
+#endif
                 validity_mask->at(x, y, 0) = 0;
             }
         }
@@ -226,7 +235,7 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
         }
     }
 
-    mve::ByteImage::Ptr inner_pixel = validity_mask->duplicate();
+    mve::RawImage::Ptr inner_pixel = validity_mask->duplicate();
 
     /* Iteratively erode all border pixels. */
     for (std::size_t i = 0; i < strip_width; ++i) {
@@ -253,7 +262,7 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
                      int ny = y + j;
                      if (0 <= nx && nx < width &&
                          0 <= ny && ny < height &&
-                         inner_pixel->at(nx, ny, 0) == 255) {
+                         inner_pixel->at(nx, ny, 0) == 65535) {
 
                          valid_border_pixels.insert(std::pair<int, int>(nx, ny));
                      }
@@ -265,25 +274,25 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
     /* Sanitize blending mask. */
     for (int y = 1; y < height - 1; ++y) {
         for (int x = 1; x < width - 1; ++x) {
-            if (blending_mask->at(x, y, 0) == 128)  {
-                uint8_t n[] = {blending_mask->at(x - 1, y, 0),
+            if (blending_mask->at(x, y, 0) == 32768)  {
+                uint16_t n[] = {blending_mask->at(x - 1, y, 0),
                     blending_mask->at(x + 1, y, 0),
                     blending_mask->at(x, y - 1, 0),
                     blending_mask->at(x, y + 1, 0)
                 };
                 bool valid = true;
-                for (uint8_t v : n) {
-                    if (v == 255) continue;
+                for (auto v : n) {
+                    if (v == 65535) continue;
                     valid = false;
                 }
-                if (valid) blending_mask->at(x, y, 0) = 255;
+                if (valid) blending_mask->at(x, y, 0) = 65535;
             }
         }
     }
 
     /* Mark all remaining pixels invalid in the blending_mask. */
     for (int i = 0; i < inner_pixel->get_pixel_amount(); ++i) {
-        if (inner_pixel->at(i) == 255) blending_mask->at(i) = 0;
+        if (inner_pixel->at(i) == 65535) blending_mask->at(i) = 0;
     }
 
     /* Mark all border pixels. */
@@ -292,6 +301,6 @@ TexturePatch::prepare_blending_mask(std::size_t strip_width){
          int x = it->first;
          int y = it->second;
 
-         blending_mask->at(x, y, 0) = 128;
+         blending_mask->at(x, y, 0) = 32768;
     }
 }

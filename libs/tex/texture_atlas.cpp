@@ -20,8 +20,8 @@ TextureAtlas::TextureAtlas(unsigned int size) :
     size(size), padding(size >> 7), finalized(false) {
 
     bin = RectangularBin::create(size, size);
-    image = mve::ByteImage::create(size, size, 3);
-    validity_mask = mve::ByteImage::create(size, size, 1);
+    image = mve::RawImage::create(size, size, 3);
+    validity_mask = mve::RawImage::create(size, size, 1);
 }
 
 /**
@@ -29,8 +29,8 @@ TextureAtlas::TextureAtlas(unsigned int size) :
   * optionally adding a border.
   * @warning asserts that the given src image fits into the given dest image.
   */
-void copy_into(mve::ByteImage::ConstPtr src, int x, int y,
-    mve::ByteImage::Ptr dest, int border = 0) {
+void copy_into(mve::RawImage::ConstPtr src, int x, int y,
+    mve::RawImage::Ptr dest, int border = 0) {
 
     assert(x >= 0 && x + src->width() + 2 * border <= dest->width());
     assert(y >= 0 && y + src->height() + 2 * border <= dest->height());
@@ -68,11 +68,11 @@ TextureAtlas::insert(TexturePatch::ConstPtr texture_patch) {
     if (!bin->insert(&rect)) return false;
 
     /* Update texture atlas and its validity mask. */
-    mve::ByteImage::Ptr patch_image = mve::image::float_to_byte_image(
+    mve::RawImage::Ptr patch_image = mve::image::float_to_raw_image(
         texture_patch->get_image(), 0.0f, 1.0f);
 
     copy_into(patch_image, rect.min_x, rect.min_y, image, padding);
-    mve::ByteImage::ConstPtr patch_validity_mask = texture_patch->get_validity_mask();
+    mve::RawImage::ConstPtr patch_validity_mask = texture_patch->get_validity_mask();
     copy_into(patch_validity_mask, rect.min_x, rect.min_y, validity_mask, padding);
 
     TexturePatch::Faces const & patch_faces = texture_patch->get_faces();
@@ -117,7 +117,7 @@ TextureAtlas::apply_edge_padding(void) {
     PixelSet invalid_border_pixels;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            if (validity_mask->at(x, y, 0) == 255) continue;
+            if (validity_mask->at(x, y, 0) == 65535) continue;
 
             /* Check the direct neighbourhood of all invalid pixels. */
             for (int j = -1; j <= 1; ++j) {
@@ -127,7 +127,7 @@ TextureAtlas::apply_edge_padding(void) {
                     /* If the invalid pixel has a valid neighbour: */
                     if (0 <= nx && nx < width &&
                         0 <= ny && ny < height &&
-                        validity_mask->at(nx, ny, 0) == 255) {
+                        validity_mask->at(nx, ny, 0) == 65535) {
 
                         /* Add the pixel to the set of invalid border pixels. */
                         invalid_border_pixels.insert(std::pair<int, int>(x, y));
@@ -137,7 +137,7 @@ TextureAtlas::apply_edge_padding(void) {
         }
     }
 
-    mve::ByteImage::Ptr new_validity_mask = validity_mask->duplicate();
+    mve::RawImage::Ptr new_validity_mask = validity_mask->duplicate();
 
     /* Iteratively dilate border pixels until padding constants are reached. */
     for (unsigned int n = 0; n <= padding; ++n) {
@@ -159,11 +159,11 @@ TextureAtlas::apply_edge_padding(void) {
                         int ny = y + j;
                         if (0 <= nx && nx < width &&
                             0 <= ny && ny < height &&
-                            new_validity_mask->at(nx, ny, 0) == 255) {
+                            new_validity_mask->at(nx, ny, 0) == 65535) {
 
                             float w = gauss[(j + 1) * 3 + (i + 1)];
                             norm += w;
-                            value += (image->at(nx, ny, c) / 255.0f) * w;
+                            value += (image->at(nx, ny, c) / 65535.0f) * w;
                         }
                     }
                 }
@@ -172,7 +172,7 @@ TextureAtlas::apply_edge_padding(void) {
                     continue;
 
                 now_valid = true;
-                image->at(x, y, c) = (value / norm) * 255.0f;
+                image->at(x, y, c) = (value / norm) * 65535.0f;
             }
 
             if (now_valid) {
@@ -187,7 +187,7 @@ TextureAtlas::apply_edge_padding(void) {
              int x = new_valid_pixels[i].first;
              int y = new_valid_pixels[i].second;
 
-             new_validity_mask->at(x, y, 0) = 255;
+             new_validity_mask->at(x, y, 0) = 65535;
         }
 
         /* Calculate the set of invalid pixels at the border of the valid area. */

@@ -29,16 +29,16 @@ math::Vec3f simple_laplacian(int i, mve::FloatImage::ConstPtr img){
         + math::Vec3f(&img->at(i + width, 0));
 }
 
-bool valid_mask(mve::ByteImage::ConstPtr mask){
+bool valid_mask(mve::RawImage::ConstPtr mask){
     const int width = mask->width();
     const int height = mask->height();
 
     for (int x = 0; x < width; ++x)
-        if (mask->at(x, 0, 0) == 255 || mask->at(x, height - 1, 0) == 255)
+        if (mask->at(x, 0, 0) == 65535 || mask->at(x, height - 1, 0) == 65535)
             return false;
 
     for (int y = 0; y < height; ++y)
-        if (mask->at(0, y, 0) == 255 || mask->at(width - 1, y, 0) == 255)
+        if (mask->at(0, y, 0) == 65535 || mask->at(width - 1, y, 0) == 65535)
             return false;
 
     //TODO check for sane boundary conditions...
@@ -47,7 +47,7 @@ bool valid_mask(mve::ByteImage::ConstPtr mask){
 }
 
 void
-poisson_blend(mve::FloatImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
+poisson_blend(mve::FloatImage::ConstPtr src, mve::RawImage::ConstPtr mask,
     mve::FloatImage::Ptr dest, float alpha) {
 
     assert(src->width() == mask->width() && mask->width() == dest->width());
@@ -87,7 +87,7 @@ poisson_blend(mve::FloatImage::ConstPtr src, mve::ByteImage::ConstPtr mask,
             coefficients_b[row] = math::Vec3f(&dest->at(i, 0));
         }
 
-        if (mask->at(i) == 255) {
+        if (mask->at(i) == 65535) {
             const int i01 = indices->at(i - width);
             const int i10 = indices->at(i - 1);
             const int i11 = indices->at(i);

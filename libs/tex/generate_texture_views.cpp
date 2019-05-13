@@ -190,12 +190,12 @@ from_nvm_scene(std::string const & nvm_file,
         mve::CameraInfo& mve_cam = cameras[i];
         mve::NVMCameraInfo const& nvm_cam = nvm_cams[i];
 
-        mve::ByteImage::Ptr image = mve::image::load_file(nvm_cam.filename);
+        mve::RawImage::Ptr image = mve::image::load_png_16_file(nvm_cam.filename);
 
         int const maxdim = std::max(image->width(), image->height());
         mve_cam.flen = mve_cam.flen / static_cast<float>(maxdim);
 
-        image = mve::image::image_undistort_vsfm<uint8_t>
+        image = mve::image::image_undistort_vsfm<uint16_t>
             (image, mve_cam.flen, nvm_cam.radial_distortion);
 
 
@@ -206,7 +206,7 @@ from_nvm_scene(std::string const & nvm_file,
                 "png"
             )
         );
-        mve::image::save_png_file(image, image_file);
+        mve::image::save_png_16_file(image, image_file);
 
         #pragma omp critical
         texture_views->push_back(TextureView(i, mve_cam, image_file));

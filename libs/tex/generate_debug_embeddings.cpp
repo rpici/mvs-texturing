@@ -21,7 +21,9 @@ const bool font[] = {
     0,1,0, 1,1,1, 1,1,1, 1,1,0, 0,0,1, 1,1,0, 0,1,0, 0,1,0, 0,1,0, 0,1,0
 };
 
-void print_number(mve::ByteImage::Ptr image, int x, int y, int digit, math::Vec3uc color) {
+typedef math::Vector<uint16_t,3> Vec3_uint16_t;
+
+void print_number(mve::RawImage::Ptr image, int x, int y, int digit, Vec3_uint16_t color) {
     assert(0 <= x && x < image->width() - 3);
     assert(0 <= y && y < image->height() - 5);
     assert(0 <= digit && digit <= 9);
@@ -80,14 +82,17 @@ generate_debug_embeddings(std::vector<TextureView> * texture_views) {
 
         /* Determine font color depending on luminance of background. */
         float luminance = math::interpolate(float_color[0], float_color[1], float_color[2], 0.30f, 0.59f, 0.11f);
-        math::Vec3uc font_color = luminance > 0.5f ? math::Vec3uc(0,0,0) : math::Vec3uc(255,255,255);
 
-        math::Vec3uc color;
-        color[0] = float_color[0] * 255.0f;
-        color[1] = float_color[1] * 255.0f;
-        color[2] = float_color[2] * 255.0f;
+        constexpr auto max_16_bit_value = 65535;
+        constexpr auto max_pixel_value = max_16_bit_value;
+        Vec3_uint16_t font_color = luminance > 0.5f ? Vec3_uint16_t(0,0,0) : Vec3_uint16_t(max_pixel_value, max_pixel_value, max_pixel_value);
 
-        mve::ByteImage::Ptr image = mve::ByteImage::create(texture_view->get_width(), texture_view->get_height(), 3);
+        Vec3_uint16_t color;
+        color[0] = float_color[0] * max_pixel_value;
+        color[1] = float_color[1] * max_pixel_value;
+        color[2] = float_color[2] * max_pixel_value;
+
+        mve::RawImage::Ptr image = mve::RawImage::create(texture_view->get_width(), texture_view->get_height(), 3);
         image->fill_color(*color);
 
         for(int ox=0; ox < image->width() - 13; ox += 13) {
