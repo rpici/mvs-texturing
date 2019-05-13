@@ -175,7 +175,11 @@ TexturePatch::set_pixel_value(math::Vec2i pixel, math::Vec3f color) {
     assert(valid_pixel(pixel));
 
     std::copy(color.begin(), color.end(), &image->at(pixel[0], pixel[1], 0));
+#ifdef ORIGINAL_8UC3_PIPELINE
     blending_mask->at(pixel[0], pixel[1], 0) = 128;
+#else
+    blending_mask->at(pixel[0], pixel[1], 0) = 32768;
+#endif
 }
 
 void
@@ -185,7 +189,11 @@ TexturePatch::blend(mve::FloatImage::ConstPtr orig) {
     /* Invalidate all pixels outside the boundary. */
     for (int y = 0; y < blending_mask->height(); ++y) {
         for (int x = 0; x < blending_mask->width(); ++x) {
+#ifdef ORIGINAL_8UC3_PIPELINE
             if (blending_mask->at(x, y, 0) == 64) {
+#else
+            if (blending_mask->at(x, y, 0) == 16384) {
+#endif
                 validity_mask->at(x, y, 0) = 0;
             }
         }
