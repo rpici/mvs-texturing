@@ -307,11 +307,11 @@ TextureView::export_triangle(math::Vec3f v1, math::Vec3f v2, math::Vec3f v3,
 void
 TextureView::export_validity_mask(std::string const & filename) const {
     assert(validity_mask.size() == static_cast<std::size_t>(width * height));
-    mve::ByteImage::Ptr img = mve::ByteImage::create(width, height, 1);
+    mve::RawImage::Ptr img = mve::RawImage::create(width, height, 1);
     for (std::size_t i = 0; i < validity_mask.size(); ++i) {
         img->at(static_cast<int>(i), 0) = validity_mask[i] ? 65535 : 0;
     }
-    mve::image::save_png_file(img, filename);
+    mve::image::save_png_16_file(img, filename);
 }
 
 TEX_NAMESPACE_END
