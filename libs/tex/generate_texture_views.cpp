@@ -68,6 +68,7 @@ void
 from_images_and_camera_files(std::string const & path,
     std::vector<TextureView> * texture_views, std::string const & tmp_dir)
 {
+    std::cerr << __PRETTY_FUNCTION__ << ": called.\n";
     util::fs::Directory dir(path);
     std::sort(dir.begin(), dir.end());
     std::vector<std::string> files;
@@ -152,6 +153,7 @@ from_images_and_camera_files(std::string const & path,
 
         std::string image_file = util::fs::abspath(img_file);
         if (cam_info.dist[0] != 0.0f) {
+            std::cerr << __PRETTY_FUNCTION__ << ": calling mve::image::load_file()...\n";
             mve::ByteImage::Ptr image = mve::image::load_file(img_file);
             if (cam_info.dist[1] != 0.0f) {
                 image = mve::image::image_undistort_k2k4<uint8_t>(image,
@@ -173,6 +175,8 @@ from_images_and_camera_files(std::string const & path,
 
         view_counter.inc();
     }
+
+    std::cerr << __PRETTY_FUNCTION__ << ": end of function.\n";
 }
 
 void
