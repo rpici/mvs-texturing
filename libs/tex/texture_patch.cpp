@@ -96,7 +96,6 @@ TexturePatch::adjust_colors(std::vector<math::Vec3f> const & adjust_values) {
                             bcoords[0], bcoords[1], bcoords[2]);
                     }
                     validity_mask->at(x, y, 0) = 65535;
-                    //blending_mask->at(x, y, 0) = 64;
                     blending_mask->at(x, y, 0) = ( 65535 + 1 ) / 4;
                 }
             }
