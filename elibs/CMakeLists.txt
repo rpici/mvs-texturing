@@ -23,7 +23,7 @@ externalproject_add(ext_rayint
 
 externalproject_add(ext_eigen
     PREFIX          ext_eigen
-    URL             https://bitbucket.org/eigen/eigen/get/3.3.2.tar.gz
+    URL             https://github.com/eigenteam/eigen-git-mirror/archive/3.3.2.zip
     URL_MD5         36b5731ab7d7e0c10843ac93bd9fd270
     SOURCE_DIR      ${CMAKE_SOURCE_DIR}/elibs/eigen
     CONFIGURE_COMMAND ""
